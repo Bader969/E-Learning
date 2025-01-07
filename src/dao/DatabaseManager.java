@@ -10,7 +10,7 @@ import java.sql.SQLException;
 public class DatabaseManager {
     private static final String JDBC_URL = "jdbc:oracle:thin:@localhost:1521/xepdb1";
     private static final String USERNAME = "system";
-    private static final String PASSWORD = "787898";
+    private static final String PASSWORD = "******";
 
     private Connection verbindung;
 
