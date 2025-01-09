@@ -52,6 +52,7 @@ public class KategorieService {
      * Führt eine Tiefensuche auf der Kategorie-Hierarchie aus und zeigt alle Elternkategorien iterativ an.
      * @param startKategorieID Start-ID der Kategorie
      */
+    /*
     public void tiefeSuche(int startKategorieID) {
         String abfrage = "SELECT KategorieID, Name, ElternKategorieID FROM Kategorie WHERE KategorieID = ?";
         List<String> elternKategorien = new ArrayList<>();
@@ -83,7 +84,49 @@ public class KategorieService {
             System.err.println("Fehler beim Durchsuchen der Elternkategorien: " + e.getMessage());
         }
     }
+*/
+    /**
+     * Führt eine Tiefensuche auf der Kategorie-Hierarchie aus und zeigt alle Unterkategorien rekursiv an.
+     * @param startKategorieID Start-ID der Kategorie
+     */
+    public void tiefeSuche(int startKategorieID) {
+        String abfrage = """
+            SELECT 
+                LEVEL AS Tiefe, 
+                KategorieID, 
+                Name, 
+                ElternKategorieID
+            FROM 
+                Kategorie
+            START WITH KategorieID = ?
+            CONNECT BY PRIOR KategorieID = ElternKategorieID
+            ORDER SIBLINGS BY Name
+        """;
 
+        try (PreparedStatement vorbereitung = verbindung.prepareStatement(abfrage)) {
+            vorbereitung.setInt(1, startKategorieID);
 
+            try (ResultSet ergebnisMenge = vorbereitung.executeQuery()) {
+                List<String> hierarchie = new ArrayList<>();
+
+                while (ergebnisMenge.next()) {
+                    int tiefe = ergebnisMenge.getInt("Tiefe");
+                    int kategorieID = ergebnisMenge.getInt("KategorieID");
+                    String name = ergebnisMenge.getString("Name");
+                    int elternKategorieID = ergebnisMenge.getInt("ElternKategorieID");
+
+                    // Formatierte Ausgabe der Hierarchie
+                    hierarchie.add(" ".repeat(tiefe * 2) + "- " + name + " (ID: " + kategorieID + ")");
+                }
+
+                // Ergebnisse anzeigen
+                System.out.println("Kategorie-Hierarchie:");
+                hierarchie.forEach(System.out::println);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Fehler bei der Tiefensuche: " + e.getMessage());
+        }
+    }
 
 }
